@@ -1,7 +1,7 @@
 <template>
     <img alt="Vue logo" src="../../public/vuetify-logo-v3-slim-light.svg">
     <div class="hello">
-        <h1>{{ msg }}</h1>
+        <h1>{{ hi_title }}</h1>
         <div>
             <el-text 
                 class="mx-1,text-wrap"
@@ -22,20 +22,19 @@
             </el-text>
         </div>
       <div class="container">
-          <el-upload
-          class="upload-demo"
-          ref="upload"
-          drag
-          multiple
-          :data="form.match_files"
-          :show-file-list="true"
-          :before-upload="beforeUpload"
-          :on-change="(file, fileList) => {handleChange(file, fileList, 'match')}"
-          :on-error="handleUploadError"
-          :on-progress="handleUploadProgress"
-          :auto-upload="false"
-          style="width: 35%;"
-          >
+        <el-upload
+        class="upload-demo"
+        ref="upload"
+        accept=".xlsx, .xls, .csv"
+        drag
+        multiple
+        :data="form.match_files"
+        :show-file-list="true"
+        :on-change="(file, fileList) => {handleChange(file, fileList, 'match')}"
+        :on-remove="(file, fileList) => {handleRemove(file, fileList, 'match')}"
+        :auto-upload="false"
+        style="width: 35%;"
+        >
           <el-icon class="el-icon--upload"><upload-filled /></el-icon>
           <div class="el-upload__text">
             Drop file here or <em>click to upload</em>
@@ -49,14 +48,13 @@
           <el-upload
           class="upload-demo"
           ref="upload"
+          accept=".xlsx, .xls, .csv"
           drag
           multiple
           :data="form.candidate_files"
           :show-file-list="true"
-          :before-upload="beforeUpload"
           :on-change="(file, fileList) => {handleChange(file, fileList, 'candidate')}"
-          :on-error="handleUploadError"
-          :on-progress="handleUploadProgress"
+          :on-remove="(file, fileList) => {handleRemove(file, fileList, 'candidate')}"
           :auto-upload="false"
           style="width: 35%; margin-left: 50px;"
           >
@@ -118,7 +116,7 @@
   
   <script>
   import { UploadFilled } from '@element-plus/icons-vue'
-  import { ElButton, FormInstance, FormRules } from 'element-plus';
+  import { ElButton, FormInstance, FormRules, ElMessage, ElMessageBox, ElNotification } from 'element-plus';
   import { ref } from 'vue';
   import api from "@/api/request.js"
   import router from '@/router';
@@ -128,14 +126,19 @@
   export default {
     name: 'mainVue',
     components: { UploadFilled, ElButton, Footer },
+    created() {
+      document.title = 'Match Excels | Upload and Analysis';
+      this.messageAlert()
+    },
     data() {
       return {
         match_ref: ref(),
         candidate_ref: ref(),
+        form_valid: false,
         headers: {
           'Content-Type': 'multipart/form-data'
         },
-        msg: "Upload Your EXCEL Files for A Quick Start",
+        hi_title: "Upload Your EXCEL Files for A Quick Start",
         isDisabled: false,
         buttonText: 'Upload and Download',
         showProgress: true,
@@ -181,97 +184,129 @@
       };
     },
     methods: {
-      handleUploadSuccess(response) {
-        console.log(response)
-      },
-      handleUploadError(error) {
-        var code = error.code
-        var message = error.message
-  
-        this.$message.error({
-          duration: 4000, 
-          message: code + " " + message
-        })
-      },
-      handleUploadProgress(event) {
-        this.showProgress = true;
-        this.uploadProgress = event.percent || 0;
-      },
-      handleChange(file, fileList, type) {
+      handleChange (file, fileList, type) {
         if(type == 'match'){
           this.form.match_files = fileList
         } else {
           this.form.candidate_files = fileList
         }
       },
-      beforeUpload(file) {  
-        var appendix = file.name.substring(file.name.lastIndexOf('.') + 1)
-        const suffix = (appendix === 'xlsx' || appendix === 'xls' || appendix === 'csv') 
-        if (!suffix) {
-          this.$message.warning({
-            duration: 5000, 
-            message: appendix.toUpperCase() + " file type is not supported! Please upload EXCEL files."
-          })
-          return false
+      handleRemove (file, fileList, type) {
+        if (type == 'match') {
+          this.form.match_files = fileList
+        } else {
+          this.form.candidate_files = fileList
         }
-        return true
       },
       submitUpload() {
-        this.$refs.formRef.validate(async valid => {
-          if (!valid) return
-        })
         if (this.form.match_files.length === 0) {
-          this.$message.warning({
-            duration: 5000, 
-            message: "Please upload your match EXCEL files first!"
+          ElNotification({
+            title: 'Warning',
+            message: 'Please upload your match EXCEL files first!',
+            type: 'warning'
           })
         } else if (this.form.candidate_files.length === 0) {
-          this.$message.warning({
-            duration: 5000, 
-            message: "Please upload your candidate EXCEL files first!"
-          })
+          ElNotification({
+            title: 'Warning',
+            message: 'Please upload your candidate EXCEL files first!',
+            type: 'warning'
+          }) 
         } else {
-          var form_data = new FormData()
-          
-          for (let i = 0; i < this.form.match_files.length; i++) {
-            form_data.append("match_files", this.form.match_files[i].raw, this.form.match_files[i].name)
-          }
-          for (let i = 0; i < this.form.candidate_files.length; i++) {
-            form_data.append("candidate_files", this.form.candidate_files[i].raw, this.form.candidate_files[i].name)
-          }
-          let merge_condition = {
-            'match': this.form.match,
-            'condition': 'equal',
-            'candidate': this.form.candidate
-          }
-          form_data.append("merge_condition", JSON.stringify(merge_condition))
-          form_data.append("mode", this.form.mode)
-          form_data.append("file_name", this.form.file_name + '.' + this.form.type)
-
-          return api({
-            url: "/match",
-            method: "post",
-            data: form_data,
-            headers: this.headers,
-            onUploadProgress: (progressEvent) => {
-              this.uploadProgress = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
+          // verify match files is xlsx, xls or csv
+          for (let i = 0; i < this.form.match_files.length; i++){
+            let match_file = this.form.match_files[i]
+            var appendix = match_file.name.substring(match_file.name.lastIndexOf('.') + 1)
+            const suffix = (appendix === 'xlsx' || appendix === 'xls' || appendix === 'csv') 
+            if (!suffix) {
+              ElNotification({
+                  title: 'Warning',
+                  message: appendix.toUpperCase() + " file type is not supported! Please upload EXCEL files.",
+                  type: 'warning'
+                })
+              return false
             }
-          }).then((response) => {
-            let loc = response.data.message
-            
-            window.open('/api/download?location=' + loc, '_blank')
-          }).catch((e) => {
-            let response = e.response
-            let msg = response.data.message
+          }
+          for (let i = 0; i < this.form.candidate_files.length; i++){
+            let match_file = this.form.candidate_files[i]
+            var appendix = match_file.name.substring(match_file.name.lastIndexOf('.') + 1)
+            const suffix = (appendix === 'xlsx' || appendix === 'xls' || appendix === 'csv') 
+            if (!suffix) {
+              ElNotification({
+                  title: 'Warning',
+                  message: appendix.toUpperCase() + " file type is not supported! Please upload EXCEL files.",
+                  type: 'warning'
+                })
+              return false
+            }
+          }
+          this.$refs.formRef.validate(valid => {
+            if (valid) {
+              var form_data = new FormData()
+                
+              for (let i = 0; i < this.form.match_files.length; i++) {
+                form_data.append("match_files", this.form.match_files[i].raw, this.form.match_files[i].name)
+              }
+              for (let i = 0; i < this.form.candidate_files.length; i++) {
+                form_data.append("candidate_files", this.form.candidate_files[i].raw, this.form.candidate_files[i].name)
+              }
+              let merge_condition = {
+                'match': this.form.match,
+                'condition': 'equal',
+                'candidate': this.form.candidate
+              }
+              form_data.append("merge_condition", JSON.stringify(merge_condition))
+              form_data.append("mode", this.form.mode)
+              form_data.append("file_name", this.form.file_name + '.' + this.form.type)
 
-            this.$message.error({
-              duration: 3000, 
-              message: msg
-            })
-          })
+              const response = api({
+                url: "/match",
+                method: "post",
+                data: form_data,
+                headers: this.headers,
+                onUploadProgress: (progressEvent_1) => {
+                  this.uploadProgress = Math.round(
+                    (progressEvent_1.loaded * 100) / progressEvent_1.total
+                  );
+                }
+              }).then((response) => {
+                let loc = response.data.message;
+
+                window.open('/api/download?location=' + loc, '_blank');
+                ElNotification({
+                  title: 'Success',
+                  message: 'The match is complete and downloading.',
+                  type: 'success'
+                });
+              }).catch((e) => {
+                let response_1 = e.response;
+                let msg = response_1.data.message;
+
+                ElNotification({
+                  title: 'Error',
+                  message: msg,
+                  type: 'error'
+                });
+              })
+            }
+          });
         }
+      },
+      messageAlert() {
+        ElMessageBox.alert(' \
+        1. Make sure your files are all the same file type. \
+        </br>2. Make sure your excel files all meet the first row as the table header and the second row starts with the data. \
+        </br>3. Make sure your file does not contain hidden rows and merged cells. \
+        </br>4. Make sure your file does not have duplicate listings.', 'Instructions', {
+          confirmButtonText: 'OK',
+          type: 'warning',
+          roundButton: true,
+          center: true,
+          dangerouslyUseHTMLString: true,
+          draggable: true,
+          callback: (action) => {
+
+          }
+        })
       }
     }
   }

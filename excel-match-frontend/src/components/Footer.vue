@@ -1,6 +1,6 @@
 <template>
     <div class="copyright">
-        <p>© 2024 Tianyu Li Insights. All rights reserved.</p>
+        <p>© 2024 <a href="https://lounwb.github.io/">Lounwb</a> Insights. All rights reserved.</p>
     </div>
 </template>
 
