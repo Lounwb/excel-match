@@ -18,34 +18,6 @@ def remove_files(file_path):
     logger.warning(f'remove dir {file_path}')
 
 # exception handler
-@bp.errorhandler(ColumnKeyError)
-def column_key_error_handler(e: ColumnKeyError):
-    logger.error(e)
-    return jsonify({
-        'code': 400,
-        'message': e.msg
-    }), 400
-    
-@bp.errorhandler(FileTypeError)
-def file_type_error_handler(e: FileTypeError):
-    logger.error(e)
-    timer = threading.Timer(30 * 60, remove_files, kwargs={'file_path': e.file_path})
-    timer.start()
-    return jsonify({
-        'code': 400,
-        'message': e.msg
-    }), 400
-
-@bp.errorhandler(ConcatError)
-def concat_error_handler(e: ConcatError):
-    logger.error(e)
-    timer = threading.Timer(1 * 60, remove_files)
-    timer.start()
-    return jsonify({
-        'code': 400,
-        'message': e.msg
-    }), 400
-
 @bp.errorhandler(FileError)
 def concat_error_handler(e: FileError):
     logger.error(e)
@@ -53,6 +25,14 @@ def concat_error_handler(e: FileError):
         'code': 400,
         'message': e.msg
     }), 400
+
+@bp.errorhandler(Exception)
+def global_error_handler(e: Exception):
+    logger.error(e)
+    return jsonify({
+        'code': 500,
+        'message': e
+    }), 500
 
 # router
 
@@ -67,6 +47,10 @@ def match():
     # save match and candidate files
     folder_name = generate_random_string(len=16)
     base_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)
+
+    # remove uploaded files in server after 30 mins
+    timer = threading.Timer(30 * 60, remove_files, kwargs={'file_path': base_path})
+    timer.start()
 
     if not os.path.exists(base_path):
         os.makedirs(os.path.join(base_path, 'match'))
@@ -96,7 +80,6 @@ def match():
     # resolve excel files
     merge_match_files = concat_files(os.path.join(base_path, 'match'), mode='match')
     merge_candidate_files = concat_files(os.path.join(base_path, 'candidate'), mode='candidate')
-
 
     result_df = merge_match_candidate(match_df=merge_match_files, 
                                       candidate_df=merge_candidate_files, 
