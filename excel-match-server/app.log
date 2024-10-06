@@ -417,3 +417,10 @@
 2024-10-03 19:20:34,863 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [03/Oct/2024 19:20:34] "[31m[1mPOST /match HTTP/1.1[0m" 400 -
 2024-10-03 19:20:39,103 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [03/Oct/2024 19:20:39] "POST /match HTTP/1.1" 200 -
 2024-10-03 19:20:39,134 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [03/Oct/2024 19:20:39] "GET /download?location=uploads\n8bUsp1cbzDoEOUI\方法.xlsx HTTP/1.1" 200 -
+2024-10-04 09:55:21,412 [INFO] _internal.224 werkzeug:	[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-04 09:55:21,412 [INFO] _internal.224 werkzeug:	[33mPress CTRL+C to quit[0m
+2024-10-04 09:55:21,414 [INFO] _internal.224 werkzeug:	 * Restarting with stat
+2024-10-04 09:55:22,283 [WARNING] _internal.224 werkzeug:	 * Debugger is active!
+2024-10-04 09:55:22,313 [INFO] _internal.224 werkzeug:	 * Debugger PIN: 779-686-288
+2024-10-05 15:40:34,679 [WARNING] routes.18 app.routes:	remove dir ./uploads\KOOok8xGm9JaWjbA

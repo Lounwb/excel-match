@@ -2,6 +2,7 @@ import sys
 import logging
 
 from app import create_app
+# from wsgiref.simple_server import make_server
 
 app = create_app()
 logger = logging.getLogger(__name__)
@@ -28,4 +29,6 @@ def config_logging(file_name: str, console_level: int=logging.INFO, file_level: 
 
 if '__main__' == __name__:
     config_logging('app.log', logging.WARNING, logging.DEBUG)
-    app.run(debug=True)
+    # http_server = make_server('127.0.0.1', 5000, app)
+    app.run(host='0.0.0.0', port=5000)
+    # http_server.serve_forever()

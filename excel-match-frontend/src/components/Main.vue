@@ -69,14 +69,15 @@
           </template>
         </el-upload>
       </div>
-      <el-form 
+      <div>
+        <el-form 
         :model="form" 
         :rules="form_rules"
         ref="formRef"
         label-width="auto"
         style="max-width: 600px; margin-left: 30%; margin-top: 20px;">
         <el-form-item label="Joined file name" prop="file_name">
-          <el-input v-model="form.file_name" />
+          <el-input v-model.trim="form.file_name" />
         </el-form-item>
         <el-form-item label="Output file type">
           <el-select v-model="form.type" placeholder="please select file type">
@@ -93,12 +94,68 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="Match attribute name" prop="match">
-          <el-input v-model="form.match" />
+          <el-input v-model.trim="form.match" />
         </el-form-item>
         <el-form-item label="Candidate attribute name" prop="candidate">
-          <el-input v-model="form.candidate" />
+          <el-input v-model.trim="form.candidate" />
         </el-form-item>
       </el-form>
+      <div v-if="form.additional_conditons.length > 0">
+        <div v-for="(item, index) in form.additional_conditons" 
+        :key="index"
+        style="margin-top: 20px;"
+        >
+        <!-- <component :is="component"></component> -->
+         <div class="condition-row">
+          <el-text class="mx-1" type="primary" style="white-space: nowrap;">Condition {{ index + 1 }}</el-text>
+            <el-mention
+              v-model="item.key"
+              :options="this.options.slice(0, 2)"
+              style="width: 200px;"
+              trigger="@"
+              @blur="handleMentionInput(item.key, index, 'key')"
+            />
+            <el-select
+              v-model="item.mode"
+              clearable
+              placeholder="Select"
+              style="width: 150px"
+            >
+              <el-option
+                v-for="item in condition_options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+            <el-mention
+              v-model="item.value"
+              :options="options"
+              style="width: 200px;"
+              trigger="@"
+              @blur="handleMentionInput(item.key, index, 'value')"
+            />
+            <el-button 
+              type="danger"
+              circle
+              @click="removeItem(index)"
+            >
+              <el-icon><Delete /></el-icon>
+            </el-button>
+         </div>
+        </div>
+      </div>
+      <el-button 
+        color="#626aef"
+        @click="addComponent"
+        plain 
+        type="primary"
+        style="margin-top: 20px;"
+        >
+        <el-icon class="el-icon--left"><Plus /></el-icon>
+        Add additional conditions
+      </el-button>
+      </div>
 
       <el-button 
         class="upload-submit-button"
@@ -115,12 +172,13 @@
   </template>
   
   <script>
-  import { UploadFilled } from '@element-plus/icons-vue'
+  import { UploadFilled, Plus, Delete } from '@element-plus/icons-vue'
   import { ElButton, FormInstance, FormRules, ElMessage, ElMessageBox, ElNotification } from 'element-plus';
-  import { ref } from 'vue';
+  import { markRaw, ref } from 'vue';
   import api from "@/api/request.js"
   import router from '@/router';
   import Footer from '@/components/Footer.vue';
+  import axios from 'axios';
 
   
   export default {
@@ -135,6 +193,7 @@
         match_ref: ref(),
         candidate_ref: ref(),
         form_valid: false,
+        components: [],
         headers: {
           'Content-Type': 'multipart/form-data'
         },
@@ -150,7 +209,8 @@
           'mode': 'inner',
           'type': 'xlsx',
           'match_files': [],
-          'candidate_files': []
+          'candidate_files': [],
+          'additional_conditons': []
         },
         form_rules: {
           file_name: [
@@ -180,7 +240,47 @@
               trigger: 'blur' 
             }
           ]
-        }
+        },
+        options: [
+          {
+            value: 'match',
+            label: 'match'
+          },
+          {
+            value: 'candidate',
+            label: 'candidate'
+          },
+          {
+            value: 'value',
+            label: 'value'
+          }
+        ],
+        condition_options: [
+          {
+            value: 'eq',
+            label: 'eq'
+          },
+          {
+            value: 'gt',
+            label: 'gt'
+          },
+          {
+            value: 'lt',
+            label: 'lt'
+          },
+          {
+            value: 'ge',
+            label: 'ge'
+          },
+          {
+            value: 'le',
+            label: 'le'
+          },
+          {
+            value: 'neq',
+            label: 'neq'
+          }
+        ]
       };
     },
     methods: {
@@ -199,6 +299,7 @@
         }
       },
       submitUpload() {
+        // verify match files not empty
         if (this.form.match_files.length === 0) {
           ElNotification({
             title: 'Warning',
@@ -206,6 +307,7 @@
             type: 'warning'
           })
         } else if (this.form.candidate_files.length === 0) {
+          // verify candidate files not empty
           ElNotification({
             title: 'Warning',
             message: 'Please upload your candidate EXCEL files first!',
@@ -226,6 +328,7 @@
               return false
             }
           }
+          // verify candidate upload files is xlsx, xls or csv
           for (let i = 0; i < this.form.candidate_files.length; i++){
             let match_file = this.form.candidate_files[i]
             var appendix = match_file.name.substring(match_file.name.lastIndexOf('.') + 1)
@@ -238,6 +341,29 @@
                 })
               return false
             }
+          }
+          // verify dynamic addtional conditions
+          let v = true;
+          for (let item of this.form.additional_conditons) {
+            let key_split = item.key.split(" ")
+            let value_split = item.value.split(" ")
+            console.log(key_split.length, value_split.length)
+            if (key_split.length < 2 || value_split.length < 2) {
+              v = false;
+              break;
+            }
+            if (key_split[1].trim().length == 0 || item.mode === '' || value_split[1].trim().length == 0) {
+              v = false;
+              break;
+            }
+          }
+          if (!v) {
+            ElNotification({
+              title: 'Warning',
+              message: 'The additional conditions are empty or incorrectly filled in, please check.',
+              type: 'warning'
+            }) 
+            return false;
           }
           this.$refs.formRef.validate(valid => {
             if (valid) {
@@ -257,18 +383,12 @@
               form_data.append("merge_condition", JSON.stringify(merge_condition))
               form_data.append("mode", this.form.mode)
               form_data.append("file_name", this.form.file_name + '.' + this.form.type)
+              form_data.append("addtiosnal_conditions", JSON.stringify(this.form.additional_conditons))
 
-              const response = api({
-                url: "/match",
-                method: "post",
-                data: form_data,
-                headers: this.headers,
-                onUploadProgress: (progressEvent_1) => {
-                  this.uploadProgress = Math.round(
-                    (progressEvent_1.loaded * 100) / progressEvent_1.total
-                  );
-                }
-              }).then((response) => {
+              axios.post(
+                // url: "/match",
+                "/api/match", form_data, this.headers
+              ).then((response) => {
                 let loc = response.data.message;
 
                 window.open('/api/download?location=' + loc, '_blank');
@@ -307,6 +427,28 @@
 
           }
         })
+      },
+      addComponent() {
+        this.form.additional_conditons.push({ key: ref('@'), mode: '' , value: ref('@')})
+      },
+      handleMentionInput(val, index, type) {
+        const isValid = this.options.some(option => val.startsWith('@' + option.value))
+
+        if (!isValid) {
+          this.form.additional_conditons[index][type] = '@' + this.options[0].value + ' '
+        }
+      },
+      removeItem(index) {
+        this.form.additional_conditons.splice(index, 1)
+      }
+    },
+    directives: {
+      trim: {
+        inserted: function (el) {
+          el.addEventListener('blur', function () {
+            el.value = el.value.trim()
+          })
+        }
       }
     }
   }
@@ -355,6 +497,14 @@
   }
   .el-menu--horizontal > .el-menu-item:nth-child(1) {
     margin-right: auto;
+  }
+  .condition-row {
+    display: flex;
+    max-width: 50%;
+    margin: 0 auto;
+  }
+  .condition-row > * {
+    margin-right: 20px;
   }
   </style>
   

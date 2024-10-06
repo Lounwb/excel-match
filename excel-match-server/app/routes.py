@@ -31,7 +31,7 @@ def global_error_handler(e: Exception):
     logger.error(e)
     return jsonify({
         'code': 500,
-        'message': e
+        'message': 'Internal Server Error'
     }), 500
 
 # router
