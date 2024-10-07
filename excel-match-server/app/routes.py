@@ -7,7 +7,7 @@ import pandas as pd
 
 from flask import Blueprint, request, jsonify, send_file
 from flask import current_app as app
-from .utils import generate_random_string, concat_files, merge_match_candidate, save_result
+from .utils import generate_random_string, concat_files, merge_match_candidate, save_result, dynamic_filter, filter_conditions
 from .exceptions import ConcatError, FileTypeError, ColumnKeyError, FileError
 
 bp = Blueprint('main', __name__)
@@ -73,13 +73,20 @@ def match():
     merge_condition = request.form.get('merge_condition')
     mode = request.form.get('mode')
     file_name = request.form.get('file_name')
+    additional_conditions = request.form.get('additional_conditions')
 
-
+    additional_conditions  = json.loads(additional_conditions)
     merge_condition = json.loads(merge_condition)
 
     # resolve excel files
     merge_match_files = concat_files(os.path.join(base_path, 'match'), mode='match')
     merge_candidate_files = concat_files(os.path.join(base_path, 'candidate'), mode='candidate')
+
+    match_conditions, candidate_conditions, joint_conditions = filter_conditions(additional_conditions)
+
+    if len(additional_conditions) > 0:
+        merge_match_files = dynamic_filter(merge_match_files, match_conditions)
+        merge_candidate_files = dynamic_filter(merge_candidate_files, candidate_conditions)
 
     result_df = merge_match_candidate(match_df=merge_match_files, 
                                       candidate_df=merge_candidate_files, 

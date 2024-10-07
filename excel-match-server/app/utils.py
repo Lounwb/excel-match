@@ -70,6 +70,59 @@ def merge_match_candidate(match_df: pd.DataFrame,
     
     return reuslt_df
 
+def dynamic_filter(df: pd.DataFrame, conditions: list):
+    for condition in conditions:
+        # example: (@match name) eq (@value jordan)
+        split_key_condition = condition['key'].split(' ') # ['@match', 'name']
+        split_value_condition = condition['value'].split(' ') # ['@value', 'jordan']
+
+        key_name = split_key_condition[0][1:] # match
+        key_attribute = split_key_condition[1] # name
+        value_name = split_value_condition[0][1:] # value
+        value_attribute = split_value_condition[1] # jordan
+
+        mode = condition['mode'] # eq
+
+        if key_attribute not in df.columns:
+            raise ColumnKeyError(f'{key_attribute} column does not exist in {key_name} files, please check.')
+        
+        df = select_by_conditons(df, mode, key_attribute, value_attribute)
+
+    return df
+
+def select_by_conditons(df: pd.DataFrame, mode: str, key_attribute: str, value_attribute: str):
+    if mode in ['eq', '==']:
+        return df[df[key_attribute] == value_attribute]
+    elif mode in ['neq', '!=']:
+        return df[df[key_attribute] != value_attribute]
+    elif mode in ['gt', '>']:
+        return df[df[key_attribute] > value_attribute]
+    elif mode in ['lt', '<']:
+        return df[df[key_attribute] < value_attribute]
+    elif mode in ['ge', '>=']:
+        return df[df[key_attribute] >= value_attribute]
+    elif mode in ['le', '<=']:
+        return df[df[key_attribute] <= value_attribute]
+    else:
+        raise ValueError('Unsupported mode.')
+
+def filter_conditions(conditions: list):
+    match_conditions = []
+    candidate_conditions = []
+    joint_conditions = []
+
+    for condition in conditions:
+        if condition['key'].startswith('@match') and condition['value'].startswith('@candidate'):
+            joint_conditions.append(condition)
+        elif condition['key'].startswith('@candidate') and condition['value'].startswith('@match'):
+            joint_conditions.append(condition)
+        elif condition['key'].startswith('@match'):
+            match_conditions.append(condition)
+        elif condition['key'].startswith('@candidate'):
+            candidate_conditions.append(condition)
+    
+    return match_conditions, candidate_conditions, joint_conditions
+
 def save_result(df: pd.DataFrame, file_name: str):
     suffix = file_name.split('.')[-1]
 

@@ -30,5 +30,5 @@ def config_logging(file_name: str, console_level: int=logging.INFO, file_level: 
 if '__main__' == __name__:
     config_logging('app.log', logging.WARNING, logging.DEBUG)
     # http_server = make_server('127.0.0.1', 5000, app)
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
     # http_server.serve_forever()

@@ -424,3 +424,27 @@
 2024-10-04 09:55:22,283 [WARNING] _internal.224 werkzeug:	 * Debugger is active!
 2024-10-04 09:55:22,313 [INFO] _internal.224 werkzeug:	 * Debugger PIN: 779-686-288
 2024-10-05 15:40:34,679 [WARNING] routes.18 app.routes:	remove dir ./uploads\KOOok8xGm9JaWjbA
+2024-10-07 15:45:27,476 [INFO] _internal.224 werkzeug:	[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.31.109:5000
+2024-10-07 15:45:27,476 [INFO] _internal.224 werkzeug:	[33mPress CTRL+C to quit[0m
+2024-10-07 15:45:27,478 [INFO] _internal.224 werkzeug:	 * Restarting with stat
+2024-10-07 15:45:28,347 [WARNING] _internal.224 werkzeug:	 * Debugger is active!
+2024-10-07 15:45:28,373 [INFO] _internal.224 werkzeug:	 * Debugger PIN: 779-686-288
+2024-10-07 15:45:48,222 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [07/Oct/2024 15:45:48] "POST /match HTTP/1.1" 200 -
+2024-10-07 15:45:48,264 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [07/Oct/2024 15:45:48] "GET /download?location=uploads\6mGzuoBYKVDHTHvP\合成大狮子.xlsx HTTP/1.1" 200 -
+2024-10-07 15:46:01,495 [ERROR] routes.23 app.routes:	刘鑫 column does not exist in value files, please check.
+2024-10-07 15:46:01,496 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [07/Oct/2024 15:46:01] "[31m[1mPOST /match HTTP/1.1[0m" 400 -
+2024-10-07 15:46:42,653 [INFO] _internal.224 werkzeug:	 * Detected change in 'E:\\projects\\excel_match\\excel-match-server\\app\\utils.py', reloading
+2024-10-07 15:46:42,716 [INFO] _internal.224 werkzeug:	 * Restarting with stat
+2024-10-07 15:46:43,655 [WARNING] _internal.224 werkzeug:	 * Debugger is active!
+2024-10-07 15:46:43,682 [INFO] _internal.224 werkzeug:	 * Debugger PIN: 779-686-288
+2024-10-07 15:46:44,623 [ERROR] routes.31 app.routes:	Unsupported mode.
+2024-10-07 15:46:44,624 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [07/Oct/2024 15:46:44] "[35m[1mPOST /match HTTP/1.1[0m" 500 -
+2024-10-07 15:46:59,382 [INFO] _internal.224 werkzeug:	 * Detected change in 'E:\\projects\\excel_match\\excel-match-server\\app\\utils.py', reloading
+2024-10-07 15:46:59,434 [INFO] _internal.224 werkzeug:	 * Restarting with stat
+2024-10-07 15:47:00,288 [WARNING] _internal.224 werkzeug:	 * Debugger is active!
+2024-10-07 15:47:00,313 [INFO] _internal.224 werkzeug:	 * Debugger PIN: 779-686-288
+2024-10-07 15:47:06,437 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [07/Oct/2024 15:47:06] "POST /match HTTP/1.1" 200 -
+2024-10-07 15:47:06,769 [INFO] _internal.224 werkzeug:	127.0.0.1 - - [07/Oct/2024 15:47:06] "GET /download?location=uploads\eUWW6Xhma1SN0N32\合成大狮子.xlsx HTTP/1.1" 200 -

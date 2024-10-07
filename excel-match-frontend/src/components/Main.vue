@@ -130,7 +130,7 @@
             </el-select>
             <el-mention
               v-model="item.value"
-              :options="options"
+              :options="getOptions(item.key)"
               style="width: 200px;"
               trigger="@"
               @blur="handleMentionInput(item.key, index, 'value')"
@@ -383,7 +383,7 @@
               form_data.append("merge_condition", JSON.stringify(merge_condition))
               form_data.append("mode", this.form.mode)
               form_data.append("file_name", this.form.file_name + '.' + this.form.type)
-              form_data.append("addtiosnal_conditions", JSON.stringify(this.form.additional_conditons))
+              form_data.append("additional_conditions", JSON.stringify(this.form.additional_conditons))
 
               axios.post(
                 // url: "/match",
@@ -440,6 +440,15 @@
       },
       removeItem(index) {
         this.form.additional_conditons.splice(index, 1)
+      },
+      getOptions(key) {
+        if (key.startsWith("@match")) {
+          return this.options.filter((element, index) => index === 1 || index === 2)
+        } else if (key.startsWith("@candidate")) {
+          return this.options.filter((element, index) => index === 0 || index === 2)
+        } else {
+          return this.options
+        }
       }
     },
     directives: {
